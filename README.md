@@ -269,7 +269,20 @@ docker-compose down
 
 ## Deployment
 
-### Production Deployment Steps
+Choose your deployment method:
+
+| Method | Best For | Database | SSL |
+|--------|----------|----------|-----|
+| **Docker Compose** | VPS, bare metal | SQLite/PostgreSQL | Manual (nginx) |
+| **Railway** | Quick deploy, teams | PostgreSQL | Automatic |
+| **Render** | Static + API apps | PostgreSQL | Automatic |
+| **Fly.io** | Global edge, scaling | PostgreSQL | Automatic |
+
+### Option A: Docker Compose (VPS/Self-Hosted)
+
+Best for: Full control, existing infrastructure, on-premise deployment.
+
+#### Production Deployment Steps
 
 1. **Generate a secret key:**
 ```bash
@@ -337,6 +350,65 @@ chmod +x scripts/backup.sh
 # List available backups
 ./scripts/backup.sh --list
 ```
+
+### Option B: Railway (Quick Deploy)
+
+Best for: Teams, quick deployment, automatic SSL.
+
+```bash
+# 1. Install Railway CLI
+npm install -g @railway/cli
+
+# 2. Login and initialize
+railway login
+railway init
+
+# 3. Add PostgreSQL database
+railway add --database postgres
+
+# 4. Set environment variables
+railway variables set DEBUG=False
+railway variables set ALLOWED_HOSTS=.railway.app
+railway variables set CORS_ALLOWED_ORIGINS=https://your-app.railway.app
+
+# 5. Deploy
+railway up
+```
+
+See [docs/PAAS_DEPLOYMENT.md](docs/PAAS_DEPLOYMENT.md) for detailed Railway instructions.
+
+### Option C: Render (Static + API)
+
+Best for: Separate static hosting, free tier available.
+
+1. Connect your GitHub repository to Render
+2. Create a new Web Service for the backend
+3. Create a PostgreSQL database
+4. Create a Static Site for the frontend
+
+See [docs/PAAS_DEPLOYMENT.md](docs/PAAS_DEPLOYMENT.md) for detailed Render instructions and `render.yaml` blueprint.
+
+### Option D: Fly.io (Global Edge)
+
+Best for: Global distribution, edge computing.
+
+```bash
+# 1. Install Fly CLI
+curl -L https://fly.io/install.sh | sh
+
+# 2. Login and launch
+fly auth login
+fly launch
+
+# 3. Create PostgreSQL database
+fly postgres create --name bstt-db
+fly postgres attach bstt-db
+
+# 4. Deploy
+fly deploy
+```
+
+See [docs/PAAS_DEPLOYMENT.md](docs/PAAS_DEPLOYMENT.md) for detailed Fly.io instructions.
 
 ## Troubleshooting
 

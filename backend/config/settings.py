@@ -6,6 +6,7 @@ Data is loaded from the original BSTT project's output directory.
 """
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,13 +68,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - Use /app/data for Docker volume persistence
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': Path(os.environ.get('DATABASE_PATH', BASE_DIR / 'data' / 'db.sqlite3')),
+# Database Configuration
+# Priority: DATABASE_URL (PaaS) > DATABASE_PATH (Docker) > Default SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # PostgreSQL for PaaS platforms (Railway, Render, Fly.io)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # SQLite for development and Docker deployments
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': Path(os.environ.get('DATABASE_PATH', BASE_DIR / 'data' / 'db.sqlite3')),
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

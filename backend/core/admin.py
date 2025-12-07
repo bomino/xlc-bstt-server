@@ -166,6 +166,7 @@ class BSTTAdminSite(admin.AdminSite):
     site_header = 'BSTT Compliance Dashboard Admin'
     site_title = 'BSTT Admin'
     index_title = 'Dashboard Administration'
+    index_template = 'admin/index.html'
 
     def get_urls(self):
         urls = super().get_urls()

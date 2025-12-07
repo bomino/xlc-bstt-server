@@ -1,12 +1,133 @@
 {% extends "admin/base_site.html" %}
 {% load static %}
 
-{% block content %}
+{% block extrastyle %}{{ block.super }}
 <style>
+    /* ============================================
+       LEFT SIDEBAR (nav-sidebar) STYLING
+       Match the Django Admin dark theme
+       ============================================ */
+
+    /* Override CSS variables for the sidebar */
+    #nav-sidebar {
+        --body-bg: #417690 !important;
+        --header-bg: #79aec8 !important;
+        background: #417690 !important;
+    }
+
+    /* CRITICAL: Remove white background from .module containers */
+    #nav-sidebar .module {
+        background: transparent !important;
+        border: none !important;
+        margin: 0 !important;
+    }
+
+    /* Section headers - "Authentication and Authorization", "Core" */
+    #nav-sidebar .module caption,
+    #nav-sidebar .module caption a,
+    #nav-sidebar .module caption a.section,
+    #nav-sidebar caption,
+    #nav-sidebar caption a,
+    #nav-sidebar caption a.section {
+        background: #79aec8 !important;
+        color: #fff !important;
+        padding: 10px 15px !important;
+        font-size: 11px !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        text-align: left !important;
+        border: none !important;
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Make sure the link inside caption doesn't add extra padding */
+    #nav-sidebar .module caption a,
+    #nav-sidebar caption a {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Table styling */
+    #nav-sidebar .module table {
+        background: transparent !important;
+        width: 100% !important;
+        border: none !important;
+    }
+
+    /* Model name rows (Groups, Users, etc.) */
+    #nav-sidebar .module th[scope="row"] {
+        background: transparent !important;
+        color: #fff !important;
+        border: none !important;
+        padding: 8px 15px !important;
+        font-weight: normal !important;
+    }
+
+    /* Add link cells */
+    #nav-sidebar .module td {
+        background: transparent !important;
+        border: none !important;
+        padding: 8px 15px !important;
+    }
+
+    /* All table rows */
+    #nav-sidebar .module tr {
+        background: transparent !important;
+    }
+
+    /* Model links in sidebar */
+    #nav-sidebar .module th a,
+    #nav-sidebar .module td a,
+    #nav-sidebar .module a:link,
+    #nav-sidebar .module a:visited {
+        color: #fff !important;
+        text-decoration: none !important;
+    }
+    #nav-sidebar .module a:hover {
+        color: #79aec8 !important;
+    }
+
+    /* Add buttons (+) - green color */
+    #nav-sidebar .module .addlink {
+        color: #44b78b !important;
+        font-weight: normal !important;
+    }
+    #nav-sidebar .module .addlink:hover {
+        color: #79aec8 !important;
+    }
+
+    /* Current model highlight */
+    #nav-sidebar .current-model {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* ============================================
+       BREADCRUMB STYLING
+       ============================================ */
+    .breadcrumbs {
+        background: #79aec8 !important;
+    }
+    .breadcrumbs a {
+        color: #fff !important;
+    }
+
+    /* ============================================
+       MAIN CONTENT AREA
+       ============================================ */
     .db-management {
         max-width: 1000px;
     }
 
+    .db-management h1 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    /* Statistics cards */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -20,6 +141,7 @@
         border-radius: 8px;
         padding: 20px;
         text-align: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .stat-value {
@@ -31,14 +153,17 @@
     .stat-label {
         color: #666;
         margin-top: 5px;
+        font-size: 14px;
     }
 
+    /* Content sections */
     .section {
         background: #fff;
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .section h2 {
@@ -46,8 +171,10 @@
         padding-bottom: 10px;
         border-bottom: 1px solid #eee;
         color: #333;
+        font-size: 18px;
     }
 
+    /* Data table */
     .year-table {
         width: 100%;
         border-collapse: collapse;
@@ -63,12 +190,27 @@
     .year-table th {
         background: #f5f5f5;
         font-weight: 600;
+        color: #333;
+        text-transform: uppercase;
+        font-size: 12px;
+    }
+
+    .year-table td {
+        color: #333;
     }
 
     .year-table tr:hover {
         background: #f9f9f9;
     }
 
+    .record-count {
+        font-family: monospace;
+        font-weight: bold;
+        color: #417690;
+        font-size: 16px;
+    }
+
+    /* Buttons */
     .action-buttons {
         display: flex;
         gap: 10px;
@@ -84,33 +226,37 @@
         cursor: pointer;
         border: none;
         font-size: 14px;
+        transition: all 0.2s ease;
     }
 
     .btn-danger {
         background: #dc3545;
-        color: white;
+        color: white !important;
     }
 
     .btn-danger:hover {
         background: #c82333;
+        color: white !important;
     }
 
     .btn-warning {
         background: #ffc107;
-        color: #212529;
+        color: #212529 !important;
     }
 
     .btn-warning:hover {
         background: #e0a800;
+        color: #212529 !important;
     }
 
     .btn-secondary {
         background: #6c757d;
-        color: white;
+        color: white !important;
     }
 
     .btn-secondary:hover {
         background: #5a6268;
+        color: white !important;
     }
 
     .btn-sm {
@@ -118,9 +264,11 @@
         font-size: 12px;
     }
 
+    /* Warning box */
     .warning-box {
         background: #fff3cd;
         border: 1px solid #ffc107;
+        border-left: 4px solid #ffc107;
         border-radius: 4px;
         padding: 15px;
         margin-bottom: 20px;
@@ -131,30 +279,44 @@
         color: #856404;
     }
 
+    /* Empty state */
     .empty-state {
         text-align: center;
         padding: 40px;
         color: #666;
     }
 
-    .record-count {
-        font-family: monospace;
-        font-weight: bold;
+    /* Danger zone section */
+    .section.danger-zone {
+        border-color: #dc3545;
+        border-left: 4px solid #dc3545;
+    }
+
+    .section.danger-zone h2 {
+        color: #dc3545;
+        border-bottom-color: #f8d7da;
+    }
+
+    .section p {
+        color: #666;
+        margin: 0 0 15px 0;
     }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="db-management">
     <h1>Database Management</h1>
 
     <div class="warning-box">
-        <strong>Warning:</strong> Deleting data is permanent and cannot be undone.
+        <strong>⚠️ Warning:</strong> Deleting data is permanent and cannot be undone.
         Make sure you have a backup before proceeding with any delete operations.
     </div>
 
     <!-- Statistics -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value">{{ stats.time_entries|default:0 }}</div>
+            <div class="stat-value">{{ stats.time_entries|default:0|floatformat:0 }}</div>
             <div class="stat-label">Time Entries</div>
         </div>
         <div class="stat-card">
@@ -169,7 +331,7 @@
 
     <!-- Data by Year -->
     <div class="section">
-        <h2>Data by Year</h2>
+        <h2>📅 Data by Year</h2>
         {% if year_stats %}
         <table class="year-table">
             <thead>
@@ -183,7 +345,7 @@
                 {% for item in year_stats %}
                 <tr>
                     <td><strong>{{ item.year }}</strong></td>
-                    <td class="record-count">{{ item.count|default:0 }}</td>
+                    <td class="record-count">{{ item.count|default:0|floatformat:0 }}</td>
                     <td>
                         <a href="{% url 'admin:clear_year_data' item.year %}" class="btn btn-warning btn-sm">
                             Delete Year {{ item.year }}
@@ -201,8 +363,8 @@
     </div>
 
     <!-- Danger Zone -->
-    <div class="section" style="border-color: #dc3545;">
-        <h2 style="color: #dc3545;">Danger Zone</h2>
+    <div class="section danger-zone">
+        <h2>🚨 Danger Zone</h2>
         <p>These actions will permanently delete data from the database.</p>
 
         <div class="action-buttons">
@@ -215,9 +377,9 @@
         </div>
     </div>
 
-    <p>
+    <p style="margin-top: 20px;">
         <a href="{% url 'admin:index' %}" class="btn btn-secondary">
-            &larr; Back to Admin
+            ← Back to Admin
         </a>
     </p>
 </div>

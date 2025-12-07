@@ -4,7 +4,8 @@ Ported from the Streamlit version.
 """
 from datetime import date, timedelta
 from decimal import Decimal
-from django.db.models import QuerySet, Sum, Count, Avg, F, Case, When, IntegerField, Max
+from django.db.models import QuerySet, Sum, Count, Avg, F, Case, When, IntegerField, Max, Value
+from django.db.models.functions import Concat
 from django.conf import settings
 
 
@@ -112,7 +113,12 @@ class KPICalculator:
             total_hol_hours=Sum('hol_wrk_hours'),
             unique_employees=Count('applicant_id', distinct=True),
             unique_offices=Count('xlc_operation', distinct=True),
-            unique_weeks=Count('dt_end_cli_work_week', distinct=True),
+            # Count distinct ISO weeks (week_year + week_number) to properly
+            # align Martinsburg Saturday endings with other offices' Sunday endings
+            unique_weeks=Count(
+                Concat('week_year', Value('-'), 'week_number'),
+                distinct=True
+            ),
         )
 
         total_hours = float(agg['total_hours'] or 0)
@@ -194,7 +200,7 @@ class KPICalculator:
 
     def by_office(self) -> list:
         """Calculate KPIs grouped by office using optimized single query."""
-        from django.db.models import Case, When, IntegerField, Value
+        from django.db.models import Case, When, IntegerField
 
         # Single aggregated query for all offices
         office_stats = self.qs.values('xlc_operation').annotate(
@@ -202,7 +208,12 @@ class KPICalculator:
             total_hours=Sum('total_hours'),
             total_ot_hours=Sum('ot_hours'),
             unique_employees=Count('applicant_id', distinct=True),
-            unique_weeks=Count('dt_end_cli_work_week', distinct=True),
+            # Count distinct ISO weeks (week_year + week_number) to properly
+            # align Martinsburg Saturday endings with other offices' Sunday endings
+            unique_weeks=Count(
+                Concat('week_year', Value('-'), 'week_number'),
+                distinct=True
+            ),
             # Count by entry type using conditional aggregation
             finger_count=Count(Case(
                 When(entry_type='Finger', then=1),
@@ -340,7 +351,12 @@ class KPICalculator:
             total_ot_hours=Sum('ot_hours'),
             unique_employees=Count('applicant_id', distinct=True),
             unique_offices=Count('xlc_operation', distinct=True),
-            unique_weeks=Count('dt_end_cli_work_week', distinct=True),
+            # Count distinct ISO weeks (week_year + week_number) to properly
+            # align Martinsburg Saturday endings with other offices' Sunday endings
+            unique_weeks=Count(
+                Concat('week_year', Value('-'), 'week_number'),
+                distinct=True
+            ),
             # Count by entry type using conditional aggregation
             finger_count=Count(Case(
                 When(entry_type='Finger', then=1),
@@ -405,7 +421,12 @@ class KPICalculator:
             total_ot_hours=Sum('ot_hours'),
             unique_employees=Count('applicant_id', distinct=True),
             unique_offices=Count('xlc_operation', distinct=True),
-            unique_weeks=Count('dt_end_cli_work_week', distinct=True),
+            # Count distinct ISO weeks (week_year + week_number) to properly
+            # align Martinsburg Saturday endings with other offices' Sunday endings
+            unique_weeks=Count(
+                Concat('week_year', Value('-'), 'week_number'),
+                distinct=True
+            ),
             # Count by entry type using conditional aggregation
             finger_count=Count(Case(
                 When(entry_type='Finger', then=1),

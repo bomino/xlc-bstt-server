@@ -299,9 +299,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false, onToggle }) => {
               color: COLORS.text.secondary,
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = `linear-gradient(90deg, ${COLORS.status.error}20 0%, ${COLORS.status.error}05 50%, transparent 100%)`;
+              e.currentTarget.style.background = `linear-gradient(90deg, ${COLORS.status.danger}20 0%, ${COLORS.status.danger}05 50%, transparent 100%)`;
               const icon = e.currentTarget.querySelector('.db-icon') as HTMLElement;
-              if (icon) icon.style.background = `${COLORS.status.error}25`;
+              if (icon) icon.style.background = `${COLORS.status.danger}25`;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';

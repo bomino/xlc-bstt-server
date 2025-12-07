@@ -188,3 +188,30 @@ LOGGING = {
         },
     },
 }
+
+# =============================================================================
+# Production Security Settings
+# =============================================================================
+# These settings are applied when DEBUG=False (production mode)
+
+if not DEBUG:
+    # HTTPS/SSL Settings
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+    # Cookie Security (require HTTPS)
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+
+    # Trust X-Forwarded-Proto header from nginx
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # HSTS (HTTP Strict Transport Security)
+    # Uncomment after confirming HTTPS works correctly
+    # SECURE_HSTS_SECONDS = 31536000  # 1 year
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
+
+    # Redirect HTTP to HTTPS (handled by nginx, but keep as fallback)
+    # SECURE_SSL_REDIRECT = True

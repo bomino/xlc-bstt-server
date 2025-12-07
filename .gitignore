@@ -83,6 +83,7 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
 backend/.env
 frontend/.env
 
@@ -107,6 +108,17 @@ data/*.xlsx
 # =========================
 # Keep docker-compose.yml but ignore local overrides
 docker-compose.override.yml
+
+# =========================
+# Production
+# =========================
+# SSL certificates (never commit private keys!)
+nginx/ssl/
+!nginx/ssl/.gitkeep
+
+# Database backups
+backups/
+!backups/.gitkeep
 
 # =========================
 # Misc

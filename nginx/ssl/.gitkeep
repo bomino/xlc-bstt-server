@@ -1,0 +1,3 @@
+# This directory contains SSL certificates for production.
+# See nginx/README.md for setup instructions.
+# Never commit actual certificates or private keys!

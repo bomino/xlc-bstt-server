@@ -58,10 +58,19 @@ BSTT-Web/
 │   │   ├── pages/                  # Dashboard, OfficeAnalysis, etc.
 │   │   ├── constants/colors.ts     # Color scheme
 │   │   └── types/index.ts          # TypeScript interfaces
-│   ├── nginx.conf          # Nginx reverse proxy config
+│   ├── nginx.conf          # Nginx reverse proxy config (development)
 │   ├── package.json
 │   └── Dockerfile
-├── docker-compose.yml
+├── nginx/
+│   ├── nginx.prod.conf     # Production Nginx config with SSL
+│   ├── ssl/                # SSL certificates (not committed)
+│   └── README.md           # SSL setup instructions
+├── scripts/
+│   └── backup.sh           # Database backup script
+├── backups/                # Database backups (not committed)
+├── docker-compose.yml      # Development Docker Compose
+├── docker-compose.prod.yml # Production Docker Compose
+├── .env.example            # Environment variable template
 ├── README.md
 └── CLAUDE.md               # This file
 ```
@@ -89,7 +98,7 @@ BSTT-Web/
 
 ## Running the Application
 
-### Docker (Production/Recommended)
+### Docker Development
 ```bash
 cd BSTT-Web
 docker-compose up --build
@@ -98,6 +107,31 @@ docker-compose up --build
 # - Frontend: http://localhost/
 # - Admin Panel: http://localhost/admin/
 # - API: http://localhost/api/
+```
+
+### Docker Production
+```bash
+# 1. Generate secret key
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+
+# 2. Create .env.production (copy from .env.example, update values)
+# - Set SECRET_KEY to generated value
+# - Set DEBUG=False
+# - Set ALLOWED_HOSTS to your domain
+# - Set CORS_ALLOWED_ORIGINS to https://your-domain.com
+
+# 3. Set up SSL certificates in nginx/ssl/ (see nginx/README.md)
+# Option A: Let's Encrypt (recommended for public servers)
+# Option B: Self-signed (for internal/testing)
+
+# 4. Build and start
+docker-compose -f docker-compose.prod.yml --env-file .env.production up --build -d
+
+# 5. Create admin user
+docker-compose -f docker-compose.prod.yml exec backend python manage.py createsuperuser
+
+# 6. Set up daily backups (add to crontab)
+# 0 2 * * * /path/to/bstt-web/scripts/backup.sh
 ```
 
 ### Local Development
@@ -261,6 +295,46 @@ docker-compose logs frontend
 ```bash
 docker-compose exec backend python manage.py collectstatic --noinput
 ```
+
+## Production Deployment
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `docker-compose.prod.yml` | Production Docker Compose with SSL, health checks |
+| `nginx/nginx.prod.conf` | Production Nginx with HTTPS, security headers |
+| `nginx/README.md` | SSL certificate setup instructions |
+| `scripts/backup.sh` | Database backup/restore script |
+| `.env.example` | Environment variable template |
+
+### Security Features (Production)
+- HTTPS with TLS 1.2/1.3
+- Security headers (HSTS, X-Frame-Options, X-Content-Type-Options)
+- CSRF and session cookie security
+- Gzip compression
+- Static asset caching
+
+### Backup Script
+```bash
+# Create backup
+./scripts/backup.sh
+
+# Restore from latest backup
+./scripts/backup.sh --restore
+
+# List available backups
+./scripts/backup.sh --list
+```
+
+### Production Checklist
+- [ ] Generate unique SECRET_KEY
+- [ ] Set DEBUG=False
+- [ ] Configure ALLOWED_HOSTS for your domain
+- [ ] Set up SSL certificates
+- [ ] Configure CORS_ALLOWED_ORIGINS
+- [ ] Create admin superuser
+- [ ] Set up daily backup cron job
+- [ ] Test health endpoints
 
 ## License
 

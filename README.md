@@ -45,7 +45,42 @@ A modern web application for tracking and analyzing biometric time tracking comp
 
 ## Quick Start
 
-### Using Docker (Recommended)
+### Option 1: Windows Server (Native - No Docker Required)
+
+**Best for**: Windows Server 2022, internal testing, development on Windows
+
+1. **Prerequisites**:
+   - Python 3.8+ ([Download](https://www.python.org/downloads/))
+   - Node.js 16+ ([Download](https://nodejs.org/))
+
+2. **First-time setup**:
+   ```cmd
+   setup-first-time.bat
+   ```
+   This will install all dependencies, set up the database, and prompt you to create an admin user.
+
+3. **Start the application**:
+   ```cmd
+   start-all.bat
+   ```
+   This opens two command windows (backend and frontend servers).
+
+4. **Access the application**:
+   - **Frontend Dashboard**: http://localhost:3000
+   - **Admin Panel**: http://localhost:8000/admin/
+   - **Upload Data**: http://localhost:8000/admin/core/dataupload/add/
+   - **Database Management**: http://localhost:8000/admin/database-management/
+   - **API**: http://localhost:8000/api/
+
+5. **Stop the application**:
+   - Close the command windows, OR
+   - Run `stop-all.bat`
+
+See [SETUP.md](SETUP.md) for detailed Windows setup instructions.
+
+### Option 2: Using Docker (Linux/Mac)
+
+**Best for**: Linux servers, Mac development, containerized deployment
 
 1. Clone the repository:
 ```bash
@@ -70,7 +105,7 @@ docker-compose exec backend python manage.py createsuperuser
 - **Database Management**: http://localhost/admin/database-management/
 - **API**: http://localhost/api/
 
-### Local Development
+### Option 3: Local Development (Manual)
 
 #### Backend Setup
 
@@ -140,9 +175,18 @@ BSTT-Web/
 │   ├── package.json
 │   ├── Dockerfile
 │   └── nginx.conf         # Nginx reverse proxy config
-├── docker-compose.yml
+├── scripts/
+│   └── backup.sh          # Database backup script (Linux/Mac)
+├── docker-compose.yml     # Development Docker Compose
+├── docker-compose.prod.yml # Production Docker Compose
+├── setup-first-time.bat   # Windows: First-time setup script
+├── start-all.bat          # Windows: Start both servers
+├── start-backend.bat      # Windows: Start backend only
+├── start-frontend.bat     # Windows: Start frontend only
+├── stop-all.bat           # Windows: Stop all servers
+├── SETUP.md               # Windows Server setup guide
 ├── CLAUDE.md              # Development guidelines
-└── README.md
+└── README.md              # This file
 ```
 
 ## API Endpoints
@@ -271,14 +315,48 @@ docker-compose down
 
 Choose your deployment method:
 
-| Method | Best For | Database | SSL |
-|--------|----------|----------|-----|
-| **Docker Compose** | VPS, bare metal | SQLite/PostgreSQL | Manual (nginx) |
-| **Railway** | Quick deploy, teams | PostgreSQL | Automatic |
-| **Render** | Static + API apps | PostgreSQL | Automatic |
-| **Fly.io** | Global edge, scaling | PostgreSQL | Automatic |
+| Method | Best For | Database | SSL | Platform |
+|--------|----------|----------|-----|----------|
+| **Windows Server Native** | Internal testing, Windows Server 2022 | SQLite | Manual (IIS) | Windows |
+| **Docker Compose** | VPS, bare metal, Linux servers | SQLite/PostgreSQL | Manual (nginx) | Linux/Mac |
+| **Railway** | Quick deploy, teams | PostgreSQL | Automatic | Cloud |
+| **Render** | Static + API apps | PostgreSQL | Automatic | Cloud |
+| **Fly.io** | Global edge, scaling | PostgreSQL | Automatic | Cloud |
 
-### Option A: Docker Compose (VPS/Self-Hosted)
+### Option A: Windows Server Native (No Docker)
+
+Best for: Windows Server 2022, internal servers where Docker Desktop is not available.
+
+**Quick Start**:
+1. Install Python 3.8+ and Node.js 16+
+2. Run `setup-first-time.bat` (one-time setup)
+3. Run `start-all.bat` (daily use)
+
+**Network Access** (optional - for accessing from other computers):
+1. Find your server IP:
+   ```powershell
+   ipconfig
+   ```
+
+2. Configure Windows Firewall to allow ports 8000 and 3000
+
+3. Update backend settings ([backend/config/settings.py](backend/config/settings.py)):
+   ```python
+   ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.100']  # Add your IP
+   ```
+
+4. Update frontend API endpoint ([frontend/src/api/client.ts](frontend/src/api/client.ts)):
+   ```typescript
+   const API_BASE_URL = 'http://192.168.1.100:8000/api';  # Use your IP
+   ```
+
+5. Access from network:
+   - Frontend: `http://<server-ip>:3000`
+   - Admin: `http://<server-ip>:8000/admin/`
+
+See [SETUP.md](SETUP.md) for detailed instructions and troubleshooting.
+
+### Option B: Docker Compose (VPS/Self-Hosted)
 
 Best for: Full control, existing infrastructure, on-premise deployment.
 
@@ -351,7 +429,7 @@ chmod +x scripts/backup.sh
 ./scripts/backup.sh --list
 ```
 
-### Option B: Railway (Quick Deploy)
+### Option C: Railway (Quick Deploy)
 
 Best for: Teams, quick deployment, automatic SSL.
 
@@ -377,7 +455,7 @@ railway up
 
 See [docs/PAAS_DEPLOYMENT.md](docs/PAAS_DEPLOYMENT.md) for detailed Railway instructions.
 
-### Option C: Render (Static + API)
+### Option D: Render (Static + API)
 
 Best for: Separate static hosting, free tier available.
 
@@ -388,7 +466,7 @@ Best for: Separate static hosting, free tier available.
 
 See [docs/PAAS_DEPLOYMENT.md](docs/PAAS_DEPLOYMENT.md) for detailed Render instructions and `render.yaml` blueprint.
 
-### Option D: Fly.io (Global Edge)
+### Option E: Fly.io (Global Edge)
 
 Best for: Global distribution, edge computing.
 
@@ -412,12 +490,32 @@ See [docs/PAAS_DEPLOYMENT.md](docs/PAAS_DEPLOYMENT.md) for detailed Fly.io instr
 
 ## Troubleshooting
 
-### Port Conflict
-If localhost:8000 times out:
+### Windows Server Issues
+
+**Port Conflict**:
 ```powershell
+# Check what's using the port
 netstat -ano | findstr ":8000.*LISTENING"
+# Kill the process
 taskkill /PID <pid> /F
+# Or simply run:
+stop-all.bat
 ```
+
+**Python/Node Not Found**:
+- Reinstall and ensure "Add to PATH" is checked
+- Restart command prompt after installation
+
+**Database Errors**:
+```powershell
+cd backend
+del db.sqlite3
+.venv\Scripts\activate
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+See [SETUP.md](SETUP.md) for more troubleshooting tips.
 
 ### Docker Issues
 ```bash

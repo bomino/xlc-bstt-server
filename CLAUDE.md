@@ -66,13 +66,19 @@ BSTT-Web/
 │   ├── ssl/                # SSL certificates (not committed)
 │   └── README.md           # SSL setup instructions
 ├── scripts/
-│   └── backup.sh           # Database backup script
+│   └── backup.sh           # Database backup script (Linux/Mac)
 ├── backups/                # Database backups (not committed)
 ├── docker-compose.yml      # Development Docker Compose
 ├── docker-compose.prod.yml # Production Docker Compose
 ├── .env.example            # Environment variable template
-├── README.md
-└── CLAUDE.md               # This file
+├── setup-first-time.bat    # Windows: First-time setup script
+├── start-all.bat           # Windows: Start both servers
+├── start-backend.bat       # Windows: Start backend only
+├── start-frontend.bat      # Windows: Start frontend only
+├── stop-all.bat            # Windows: Stop all servers
+├── SETUP.md                # Windows Server setup guide
+├── README.md               # Main documentation
+└── CLAUDE.md               # This file (development guidelines)
 ```
 
 ## Key Files
@@ -97,6 +103,40 @@ BSTT-Web/
 | `constants/colors.ts` | Theme colors and status colors |
 
 ## Running the Application
+
+### Windows Server Native (No Docker)
+
+**Best for**: Windows Server 2022 where Docker Desktop is unavailable.
+
+```cmd
+# First-time setup (run once)
+setup-first-time.bat
+
+# Daily use - start both servers
+start-all.bat
+
+# Stop all servers
+stop-all.bat
+
+# Access:
+# - Frontend: http://localhost:3000
+# - Admin Panel: http://localhost:8000/admin/
+# - API: http://localhost:8000/api/
+```
+
+**Startup Scripts**:
+- `setup-first-time.bat` - One-time setup (installs dependencies, creates database, creates admin user)
+- `start-all.bat` - Starts both backend and frontend in separate windows
+- `start-backend.bat` - Starts Django backend only (port 8000)
+- `start-frontend.bat` - Starts React frontend only (port 3000)
+- `stop-all.bat` - Stops all running servers
+
+**Network Access** (optional):
+1. Configure Windows Firewall for ports 8000 and 3000
+2. Update `ALLOWED_HOSTS` in `backend/config/settings.py`
+3. Update `API_BASE_URL` in `frontend/src/api/client.ts`
+
+See [SETUP.md](SETUP.md) for detailed setup instructions and troubleshooting.
 
 ### Docker Development
 ```bash
@@ -134,17 +174,35 @@ docker-compose -f docker-compose.prod.yml exec backend python manage.py createsu
 # 0 2 * * * /path/to/bstt-web/scripts/backup.sh
 ```
 
-### Local Development
-```bash
+### Local Development (Manual)
+
+**Windows**:
+```cmd
 # Backend
 cd backend
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+.venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver 8000
 
-# Frontend
+# Frontend (in new terminal)
+cd frontend
+npm install
+npm start
+```
+
+**Linux/Mac**:
+```bash
+# Backend
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 8000
+
+# Frontend (in new terminal)
 cd frontend
 npm install
 npm start
@@ -272,13 +330,50 @@ COLORS = {
 
 ## Troubleshooting
 
-### Port Conflict
-If localhost:8000 times out, check for conflicting processes:
+### Windows Server Issues
+
+**Port Conflict**:
 ```powershell
+# Check what's using the port
 netstat -ano | findstr ":8000.*LISTENING"
-# Kill conflicting process if needed
+# Kill the process
 taskkill /PID <pid> /F
+# Or simply run:
+stop-all.bat
 ```
+
+**Python/Node Not Found**:
+- Reinstall and ensure "Add to PATH" is checked during installation
+- Restart command prompt after installation
+
+**Virtual Environment Errors**:
+```powershell
+# Delete and recreate virtual environment
+cd backend
+rmdir /s /q .venv
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Database Errors**:
+```powershell
+cd backend
+del db.sqlite3
+.venv\Scripts\activate
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+**Frontend Build Errors**:
+```powershell
+cd frontend
+rmdir /s /q node_modules
+del package-lock.json
+npm install
+```
+
+See [SETUP.md](SETUP.md) for more Windows-specific troubleshooting.
 
 ### Docker Issues
 ```bash
